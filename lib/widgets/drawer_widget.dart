@@ -1,132 +1,212 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:zypher_top_up/screens/dashboard_screen.dart';
 import '../screens/login_screen.dart';
+import '../screens/add_money_screen.dart';
+import '../screens/contact_us_screen.dart';
 
 class SideDrawer extends StatelessWidget {
   const SideDrawer({super.key});
 
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint("Could not launch $url");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // লগইন স্ট্যাটাস চেক
+    final User? user = FirebaseAuth.instance.currentUser;
+
     return Drawer(
-      backgroundColor: Colors.white, // ড্রয়ার সাদা থাকবে ছবির মতো
-      width:
-          MediaQuery.of(context).size.width *
-          0.2, // মেনু স্ক্রিনের 2০% জায়গা নিবে
+      backgroundColor: Colors.white,
+      // উইন্ডো সাইজ পরিবর্তন করলেও ড্রয়ারের সাইজ ফিক্সড থাকবে
+      width: 260,
       child: Column(
         children: [
-          // ১. ইউজার প্রোফাইল হেডার (এখানে context পাস করা হয়েছে)
-          _buildHeader(context),
+          // ১. প্রোফাইল হেডার
+          _buildHeader(context, user),
 
           // ২. মেনু লিস্ট
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(vertical: 10),
               children: [
-                _drawerItem(Icons.home_outlined, "My Account"),
-                _drawerItem(Icons.bookmark_border, "My Orders"),
-                _drawerItem(Icons.grid_view, "My Codes"),
-                _drawerItem(Icons.list_alt, "My Transaction"),
-                _drawerItem(Icons.account_balance_wallet_outlined, "Add Money"),
-                _drawerItem(Icons.info_outline, "Contact Us"),
-
-                const SizedBox(height: 20),
-
-                // ৩. সাপোর্ট বাটন
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.headset_mic, color: Colors.white),
-                    label: const Text(
-                      "Support",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B5CF6), // Purple color
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.home_outlined,
+                  title: "Home",
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DashboardScreen(),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.account_box,
+                  title: "My Account",
+                  onTap: () => Navigator.pop(context),
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: "Add Money",
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddMoneyScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.history,
+                  title: "My Orders",
+                  onTap: () {},
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.receipt_long_outlined,
+                  title: "Transactions",
+                  onTap: () {},
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.contact_support_outlined,
+                  title: "Contact Us",
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ContactUsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+
+                // ইউজার লগইন থাকলে Logout, না থাকলে Login অপশন দেখাবে
+                if (user != null)
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.logout,
+                    title: "Logout",
+                    color: Colors.red,
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    },
+                  )
+                else
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.login,
+                    title: "Login",
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),
 
-          // ৪. একদম নিচের হেল্প বাটন (লাল রঙের)
-          _buildFooter(),
+          // ৩. ফুটার: সাহায্য লাগবে টেক্সট এবং কল বাটন পাশাপাশি
+          _buildFooterHelp(),
         ],
       ),
     );
   }
 
-  // Header ফাংশনে context গ্রহণ করা হয়েছে যাতে Navigator কাজ করে
-  Widget _buildHeader(BuildContext context) {
+  // মেনু আইটেম ডিজাইন (Bold এবং Arrow ছাড়া)
+  Widget _buildMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color color = Colors.black87,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: color, size: 22),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 16,
+          fontWeight: FontWeight.bold, // সব অপশন Bold
+        ),
+      ),
+      onTap: onTap,
+      // trailing: অ্যারো রিমুভ করা হয়েছে
+    );
+  }
+
+  // হেডার সেকশন
+  Widget _buildHeader(BuildContext context, User? user) {
     return Container(
-      padding: const EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 20),
+      padding: const EdgeInsets.only(top: 50, bottom: 20, left: 15, right: 15),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple, Colors.blueAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.blueGrey,
-            child: Icon(Icons.person, color: Colors.white),
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: Colors.white24,
+            child: user?.photoURL != null
+                ? ClipOval(child: Image.network(user!.photoURL!))
+                : const Icon(Icons.person, color: Colors.white, size: 30),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Hi, alawol us",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+                Text(
+                  user?.displayName ?? "Guest User",
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  "alawolus@gmail.com",
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-
-                // Logout Button
-                GestureDetector(
-                  onTap: () {
-                    // লগআউট করলে সরাসরি লগইন স্ক্রিনে নিয়ে যাবে এবং আগের সব হিস্ট্রি মুছে দিবে
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.power_settings_new,
-                          size: 14,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          "Logout",
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
+                Text(
+                  user?.email ?? "Welcome to Zypher",
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -136,43 +216,64 @@ class SideDrawer extends StatelessWidget {
     );
   }
 
-  Widget _drawerItem(IconData icon, String title) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.black87),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      onTap: () {
-        // মেনু আইটেমে ক্লিক করলে কি হবে এখানে লিখবেন
-      },
-    );
-  }
-
-  Widget _buildFooter() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+  // ফুটার সেকশন: সাহায্য লাগবে এবং বাটন পাশাপাশি
+  Widget _buildFooterHelp() {
+    return Container(
+      padding: const EdgeInsets.all(15),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.red,
               borderRadius: BorderRadius.circular(5),
             ),
             child: const Text(
-              "সাহায্য লাগবে?",
-              style: TextStyle(color: Colors.white),
+              "সাহায্য লাগবে ?",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
             ),
           ),
-          const SizedBox(width: 10),
-          const CircleAvatar(
+          const SizedBox(width: 8),
+          SpeedDial(
+            icon: Icons.phone,
+            activeIcon: Icons.close,
             backgroundColor: Colors.red,
-            child: Icon(Icons.phone, color: Colors.white),
+            foregroundColor: Colors.white,
+            mini: true,
+            children: [
+              SpeedDialChild(
+                child: const FaIcon(
+                  FontAwesomeIcons.facebookMessenger,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                backgroundColor: const Color(0xFF0084FF),
+                onTap: () => _launchURL("https://m.me/your_username"),
+              ),
+              SpeedDialChild(
+                child: const FaIcon(
+                  FontAwesomeIcons.whatsapp,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                backgroundColor: const Color(0xFF25D366),
+                onTap: () => _launchURL("https://wa.me/8801577342445"),
+              ),
+              SpeedDialChild(
+                child: const FaIcon(
+                  FontAwesomeIcons.telegram,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                backgroundColor: const Color(0xFF0088CC),
+                onTap: () => _launchURL("https://t.me/Zypher_Top_Up_Helpline"),
+              ),
+            ],
           ),
         ],
       ),

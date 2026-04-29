@@ -8,16 +8,88 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Zypher TopUp"),
-        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              height: 40,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.image_not_supported,
+                color: Colors.grey,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Image.asset(
+              'assets/images/banner.png',
+              height: 30,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Text(
+                "ZYPHER",
+                style: TextStyle(
+                  color: Colors.deepPurple,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: [
-          // প্রোফাইল আইকন - এটা ক্লিক করলে ডান পাশের ড্রয়ার খুলবে
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.person_outline, size: 30),
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
+          TextButton(
+            onPressed: () {},
+            child: const Text(
+              "Topup",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
+          TextButton(
+            onPressed: () {},
+            child: const Text(
+              "Contact Us",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B5CF6),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                "৳ 0",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Builder(
+            builder: (context) => GestureDetector(
+              onTap: () => Scaffold.of(context).openEndDrawer(),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.blueGrey,
+                child: Icon(Icons.person, color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
         ],
       ),
 
@@ -58,7 +130,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
+        border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
