@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zypher_top_up/screens/login_screen.dart';
-import 'package:zypher_top_up/services/auth_service.dart'; // নিশ্চিত করুন এই পাথটি ঠিক আছে
+import 'package:zypher_top_up/services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -12,54 +12,53 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   bool _isObscure = true;
 
-  // ১. কন্ট্রোলারগুলো যোগ করা হয়েছে
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService(); // আপনার তৈরি করা সেই সার্ভিস
+  final AuthService _authService = AuthService();
 
-  // সাইন আপ লজিক ফাংশন
+  // সাইন-আপ হ্যান্ডেল করার ফাংশন
   void _handleSignup() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please fill all fields!")));
+      _showSnackBar("Please fill all fields!", Colors.red);
       return;
     }
 
-    // ২. ফায়ারবেসে ডাটা পাঠানো
+    // লোডিং ইন্ডিকেটর দেখানো
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    // AuthService এর মাধ্যমে ইউজার তৈরি এবং ডাটাবেস এন্ট্রি
     String? result = await _authService.signUp(name, email, password);
 
+    if (mounted) Navigator.pop(context); // লোডিং বন্ধ করা
+
     if (result == "Success") {
-      // ৩. সফল হলে মেসেজ দেখানো
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Sign up successful! Please login."),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // ৪. লগ-ইন পেজে নিয়ে যাওয়া
+        _showSnackBar("Account Created Successfully!", Colors.green);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
     } else {
-      // এরর হলে দেখানো
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result ?? "Signup Failed ! Please Try again."),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showSnackBar(result ?? "Signup Failed", Colors.red);
       }
     }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   @override
@@ -70,144 +69,148 @@ class _SignupScreenState extends State<SignupScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF63D8D8), Color(0xFF3B82F6)],
+            colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 80),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Create your\nAccount",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    height: 1.2,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 50),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Create Account",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 60),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Join Zypher Top Up Today",
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  const SizedBox(height: 50),
 
-                // ইউজার নেম ফিল্ড (Controller যুক্ত)
-                _buildTransparentField(
-                  hint: "User Name",
-                  icon: Icons.person_outline,
-                  controller: _nameController,
-                ),
-                const SizedBox(height: 25),
+                  _buildTransparentField(
+                    hint: "Full Name",
+                    icon: Icons.person_outline,
+                    controller: _nameController,
+                  ),
+                  const SizedBox(height: 25),
+                  _buildTransparentField(
+                    hint: "Email Address",
+                    icon: Icons.email_outlined,
+                    controller: _emailController,
+                  ),
+                  const SizedBox(height: 25),
 
-                // ইমেইল ফিল্ড (Controller যুক্ত)
-                _buildTransparentField(
-                  hint: "example@gmail.com",
-                  icon: Icons.email_outlined,
-                  controller: _emailController,
-                ),
-                const SizedBox(height: 25),
-
-                // পাসওয়ার্ড ফিল্ড
-                Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.lock_outline,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: TextField(
-                            controller: _passwordController, // Controller যুক্ত
-                            obscureText: _isObscure,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: const InputDecoration(
-                              hintText: "Password",
-                              hintStyle: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 15,
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.lock_outline,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: TextField(
+                              controller: _passwordController,
+                              obscureText: _isObscure,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: "Password",
+                                hintStyle: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 15,
+                                ),
+                                border: InputBorder.none,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isObscure
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: Colors.white70,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isObscure = !_isObscure;
+                                    });
+                                  },
+                                ),
                               ),
-                              border: InputBorder.none,
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            _isObscure
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: Colors.white70,
-                            size: 20,
-                          ),
-                          onPressed: () =>
-                              setState(() => _isObscure = !_isObscure),
-                        ),
-                      ],
-                    ),
-                    const Divider(color: Colors.white54, thickness: 1),
-                  ],
-                ),
+                        ],
+                      ),
+                      const Divider(color: Colors.white54, thickness: 1),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
 
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Have Account Sign In?",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _handleSignup,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
+                        elevation: 5,
                       ),
                       child: const Text(
-                        "Sign In",
+                        "Sign Up",
                         style: TextStyle(
-                          color: Colors.white,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          fontSize: 15,
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 50),
-
-                // ৪. সাইন আপ বাটন (লজিক কল করা হয়েছে)
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _handleSignup,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      minimumSize: const Size(220, 55),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 5,
-                    ),
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 25),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Already have an account? ",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -215,7 +218,6 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // ট্রান্সপারেন্ট ফিল্ড মেথড (Controller প্যারামিটার যোগ করা হয়েছে)
   Widget _buildTransparentField({
     required String hint,
     required IconData icon,
@@ -229,7 +231,7 @@ class _SignupScreenState extends State<SignupScreen> {
             const SizedBox(width: 15),
             Expanded(
               child: TextField(
-                controller: controller, // এখানে কন্ট্রোলারটি বসবে
+                controller: controller,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: hint,
