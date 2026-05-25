@@ -7,6 +7,7 @@ import 'package:zypher_top_up/screens/dashboard_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/add_money_screen.dart';
 import '../screens/contact_us_screen.dart';
+import 'package:zypher_top_up/screens/my_orders_screen.dart';
 
 class SideDrawer extends StatelessWidget {
   const SideDrawer({super.key});
@@ -22,27 +23,26 @@ class SideDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // লগইন স্ট্যাটাস চেক
     final User? user = FirebaseAuth.instance.currentUser;
 
     return Drawer(
-      backgroundColor: Colors.white,
-      // উইন্ডো সাইজ পরিবর্তন করলেও ড্রয়ারের সাইজ ফিক্সড থাকবে
+      backgroundColor: const Color(0xFF0F1424),
       width: 260,
       child: Column(
         children: [
-          // ১. প্রোফাইল হেডার
+          // ── Header ──
           _buildHeader(context, user),
 
-          // ২. মেনু লিস্ট
+          // ── Menu ──
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
                 _buildMenuItem(
                   context,
-                  icon: Icons.home_outlined,
-                  title: "Home",
+                  icon: Icons.dashboard_outlined,
+                  title: "Dashboard",
+                  accentColor: const Color(0xFF00E5FF),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -55,14 +55,16 @@ class SideDrawer extends StatelessWidget {
                 ),
                 _buildMenuItem(
                   context,
-                  icon: Icons.account_box,
+                  icon: Icons.account_circle_outlined,
                   title: "My Account",
+                  accentColor: const Color(0xFFA259FF),
                   onTap: () => Navigator.pop(context),
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.account_balance_wallet_outlined,
                   title: "Add Money",
+                  accentColor: const Color(0xFF22C55E),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -75,20 +77,32 @@ class SideDrawer extends StatelessWidget {
                 ),
                 _buildMenuItem(
                   context,
-                  icon: Icons.history,
+                  icon: Icons.history_rounded,
                   title: "My Orders",
-                  onTap: () {},
+                  accentColor: const Color(0xFFF59E0B),
+                  onTap: () {
+                    // Drawer-ti bondho korbe ebong MyOrdersScreen-e niye jabe
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyOrdersScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.receipt_long_outlined,
                   title: "Transactions",
+                  accentColor: const Color(0xFF00E5FF),
                   onTap: () {},
                 ),
                 _buildMenuItem(
                   context,
                   icon: Icons.contact_support_outlined,
                   title: "Contact Us",
+                  accentColor: const Color(0xFFA259FF),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -99,22 +113,32 @@ class SideDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                const Divider(),
 
-                // ইউজার লগইন থাকলে Logout, না থাকলে Login অপশন দেখাবে
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Divider(
+                    height: 1,
+                    thickness: 0.5,
+                    color: const Color(0xFF1E2540),
+                  ),
+                ),
+
                 if (user != null)
                   _buildMenuItem(
                     context,
-                    icon: Icons.logout,
+                    icon: Icons.logout_rounded,
                     title: "Logout",
-                    color: Colors.red,
+                    accentColor: const Color(0xFFEF4444),
                     onTap: () async {
                       await FirebaseAuth.instance.signOut();
                       if (context.mounted) {
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
+                            builder: (context) => const DashboardScreen(),
                           ),
                           (route) => false,
                         );
@@ -124,9 +148,9 @@ class SideDrawer extends StatelessWidget {
                 else
                   _buildMenuItem(
                     context,
-                    icon: Icons.login,
+                    icon: Icons.login_rounded,
                     title: "Login",
-                    color: Colors.blue,
+                    accentColor: const Color(0xFF00E5FF),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -140,73 +164,148 @@ class SideDrawer extends StatelessWidget {
             ),
           ),
 
-          // ৩. ফুটার: সাহায্য লাগবে টেক্সট এবং কল বাটন পাশাপাশি
+          // ── Footer ──
           _buildFooterHelp(),
         ],
       ),
     );
   }
 
-  // মেনু আইটেম ডিজাইন (Bold এবং Arrow ছাড়া)
   Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
-    Color color = Colors.black87,
+    Color accentColor = const Color(0xFF00E5FF),
   }) {
-    return ListTile(
-      leading: Icon(icon, color: color, size: 22),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: color,
-          fontSize: 16,
-          fontWeight: FontWeight.bold, // সব অপশন Bold
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: accentColor, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: const Color(0xFF64748B),
+                size: 18,
+              ),
+            ],
+          ),
         ),
       ),
-      onTap: onTap,
-      // trailing: অ্যারো রিমুভ করা হয়েছে
     );
   }
 
-  // হেডার সেকশন
   Widget _buildHeader(BuildContext context, User? user) {
     return Container(
-      padding: const EdgeInsets.only(top: 50, bottom: 20, left: 15, right: 15),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.deepPurple, Colors.blueAccent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      padding: const EdgeInsets.only(top: 55, bottom: 24, left: 16, right: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF12172A),
+        border: const Border(
+          bottom: BorderSide(color: Color(0xFF1E2540), width: 1),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: Colors.white24,
-            child: user?.photoURL != null
-                ? ClipOval(child: Image.network(user!.photoURL!))
-                : const Icon(Icons.person, color: Colors.white, size: 30),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user?.displayName ?? "Guest User",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF00E5FF), width: 2),
                 ),
+                child: CircleAvatar(
+                  radius: 26,
+                  backgroundColor: const Color(0xFF1E2540),
+                  child: user?.photoURL != null
+                      ? ClipOval(child: Image.network(user!.photoURL!))
+                      : const Icon(
+                          Icons.person,
+                          color: Color(0xFF00E5FF),
+                          size: 28,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.displayName ?? "Guest User",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      user?.email ?? "Welcome to Zypher",
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 11,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Balance Card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0A0D1A),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFF1E2540)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Color(0xFF00E5FF),
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Balance',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                const Spacer(),
                 Text(
-                  user?.email ?? "Welcome to Zypher",
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                  overflow: TextOverflow.ellipsis,
+                  user != null ? '৳ 0' : '---',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00E5FF),
+                  ),
                 ),
               ],
             ),
@@ -216,35 +315,41 @@ class SideDrawer extends StatelessWidget {
     );
   }
 
-  // ফুটার সেকশন: সাহায্য লাগবে এবং বাটন পাশাপাশি
   Widget _buildFooterHelp() {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFF1E2540), width: 1)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(5),
+              color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+              ),
             ),
             child: const Text(
               "সাহায্য লাগবে ?",
               style: TextStyle(
-                color: Colors.white,
+                color: Color(0xFFEF4444),
                 fontWeight: FontWeight.bold,
-                fontSize: 11,
+                fontSize: 12,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           SpeedDial(
-            icon: Icons.phone,
+            icon: Icons.phone_rounded,
             activeIcon: Icons.close,
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFEF4444),
             foregroundColor: Colors.white,
             mini: true,
+            overlayOpacity: 0,
             children: [
               SpeedDialChild(
                 child: const FaIcon(

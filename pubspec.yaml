@@ -40,6 +40,8 @@ dependencies:
   flutter_speed_dial: ^7.0.0
   font_awesome_flutter: ^10.7.0
   url_launcher: ^6.3.2
+  cloud_firestore: ^5.6.12
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +71,19 @@ flutter:
     - assets/images/nogod.png
     - assets/images/banner.png
     - assets/images/logo.png
+    - assets/images/add_money.png
+    - assets/images/free_fire.png
+    - assets/images/level up pass.png
+    - assets/images/offer_tl.png
+    - assets/images/Support24-7.png
+    - assets/images/uid top up.png
+    - assets/images/weekly-monthly.png
+    - assets/images/weeklylite.png
+    - assets/images/unipin_voucher.png
+    - assets/images/evo_access.png
+    - assets/images/indonesia.png
+    - assets/images/wallet.png
+    - assets/images/autopay.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

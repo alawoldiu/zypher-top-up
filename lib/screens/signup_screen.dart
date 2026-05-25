@@ -17,25 +17,32 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
 
+  // সাইন-আপ হ্যান্ডেল করার ফাংশন
   void _handleSignup() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please fill all fields!")));
+      _showSnackBar("Please fill all fields!", Colors.red);
       return;
     }
 
+    // লোডিং ইন্ডিকেটর দেখানো
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    // AuthService এর মাধ্যমে ইউজার তৈরি এবং ডাটাবেস এন্ট্রি
     String? result = await _authService.signUp(name, email, password);
+
+    if (mounted) Navigator.pop(context); // লোডিং বন্ধ করা
 
     if (result == "Success") {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Account Created Successfully!")),
-        );
+        _showSnackBar("Account Created Successfully!", Colors.green);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -43,17 +50,20 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(result ?? "Signup Failed")));
+        _showSnackBar(result ?? "Signup Failed", Colors.red);
       }
     }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ব্যাকগ্রাউন্ড হিসেবে আপনার আগের সেই নীলচে গ্রেডিয়েন্ট রাখা হয়েছে
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -65,7 +75,6 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
         child: Center(
-          // ConstrainedBox ব্যবহার করা হয়েছে যাতে বড় উইন্ডোতে ফর্মটি বেশি চওড়া না হয়ে যায়
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: SingleChildScrollView(
@@ -89,7 +98,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 50),
 
-                  // ইনপুট ফিল্ডগুলো
                   _buildTransparentField(
                     hint: "Full Name",
                     icon: Icons.person_outline,
@@ -103,7 +111,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 25),
 
-                  // পাসওয়ার্ড ফিল্ড (Eye Icon সহ)
                   Column(
                     children: [
                       Row(
@@ -149,7 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ],
                   ),
                   const SizedBox(height: 40),
-                  // সাইন আপ বাটন
+
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -175,7 +182,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
                   const SizedBox(height: 25),
 
-                  // লগইন লিংক
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
